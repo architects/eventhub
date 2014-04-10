@@ -1,29 +1,44 @@
-# Eventhub
+# EventHub
 
-TODO: Write a gem description
+EventHub provides a central, globally accessible object to pipe all of
+your event tracking calls to.  It provides a clean, declarative way of responding to 
+these events with things like email or push notifications, calls to
+external services, etc.
 
-## Installation
+### Example
 
-Add this line to your application's Gemfile:
+Where you might do...
 
-    gem 'eventhub'
+```ruby
+class User < ActiveRecord::Base
+  after_create :send_email_notification
+  after_create :send_push_notification
 
-And then execute:
+  def send_email_notification
+    # Whatever you do
+  end
 
-    $ bundle
+  def send_push_notification
+    # Whatever you do
+  end
+end
+```
 
-Or install it yourself as:
+You can now do:
 
-    $ gem install eventhub
+```ruby
+class User < ActiveRecord::Base
+  after_create :track_creation_event
 
-## Usage
+  def track_creation_event
+    EventHub.track(:creation, self)
+  end
+end
 
-TODO: Write usage instructions here
+# config/initializers/event_hub.rb
 
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+EventHub.on(:creation).of(User) do |user|
+  UserMailer.signup_email(user.id)
+  UrbanAirship.register_device(user.apns_token)
+end
+```
